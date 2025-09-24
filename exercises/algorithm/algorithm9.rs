@@ -2,7 +2,6 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -38,6 +37,20 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        self.count += 1;
+        self.items.push(value);
+        let mut idx = self.count;
+        
+        // Bubble up: compare with parent and swap if necessary
+        while idx > 1 {
+            let parent_idx = self.parent_idx(idx);
+            if (self.comparator)(&self.items[idx], &self.items[parent_idx]) {
+                self.items.swap(idx, parent_idx);
+                idx = parent_idx;
+            } else {
+                break;
+            }
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -58,7 +71,25 @@ where
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
         //TODO
-		0
+		let left = self.left_child_idx(idx);
+        let right = self.right_child_idx(idx);
+        
+        // If no left child, return current index (shouldn't happen in valid heap)
+        if left > self.count {
+            return idx;
+        }
+        
+        // If no right child, left child is the only option
+        if right > self.count {
+            return left;
+        }
+        
+        // Return the child that satisfies the comparator (smaller for min-heap, larger for max-heap)
+        if (self.comparator)(&self.items[left], &self.items[right]) {
+            left
+        } else {
+            right
+        }
     }
 }
 
@@ -85,7 +116,36 @@ where
 
     fn next(&mut self) -> Option<T> {
         //TODO
-		None
+		if self.is_empty() {
+            return None;
+        }
+        
+        // Save the root element (min or max depending on comparator)
+        let result = std::mem::replace(&mut self.items[1], T::default());
+        
+        // Move the last element to the root
+        if self.count > 1 {
+            self.items[1] = self.items.pop().unwrap();
+        } else {
+            self.items.pop();
+        }
+        self.count -= 1;
+        
+        // If heap is not empty, restore heap property by bubbling down
+        if !self.is_empty() {
+            let mut idx = 1;
+            while self.children_present(idx) {
+                let smallest_child = self.smallest_child_idx(idx);
+                if (self.comparator)(&self.items[smallest_child], &self.items[idx]) {
+                    self.items.swap(idx, smallest_child);
+                    idx = smallest_child;
+                } else {
+                    break;
+                }
+            }
+        }
+        
+        Some(result)
     }
 }
 
